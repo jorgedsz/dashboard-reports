@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { clientsAPI, reportsAPI } from '../services/api';
 import { Loader2, Sparkles } from 'lucide-react';
 
-const CONVERSATION_TYPES = [
-  { value: 'TYPE_PHONE', label: 'Phone Calls' },
-  { value: 'TYPE_EMAIL', label: 'Email' },
+const MESSAGE_TYPES = [
   { value: 'TYPE_SMS', label: 'SMS' },
-  { value: 'TYPE_FB_MESSENGER', label: 'Facebook Messenger' },
+  { value: 'TYPE_EMAIL', label: 'Email' },
+  { value: 'TYPE_CALL', label: 'Phone Calls' },
+  { value: 'TYPE_FB', label: 'Facebook Messenger' },
   { value: 'TYPE_INSTAGRAM', label: 'Instagram' },
   { value: 'TYPE_WHATSAPP', label: 'WhatsApp' },
   { value: 'TYPE_LIVE_CHAT', label: 'Live Chat' },
@@ -115,7 +115,7 @@ export default function ReportNewPage() {
             <h2 className="text-lg font-semibold mb-2">3. Message Types</h2>
             <p className="text-sm text-gray-500 mb-4">Filter by message type. Leave all unchecked to include all messages.</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {CONVERSATION_TYPES.map(({ value, label }) => (
+              {MESSAGE_TYPES.map(({ value, label }) => (
                 <label key={value} className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all ${
                   form.conversationTypes.includes(value) ? 'bg-orange-500/20 border border-orange-500/40' : 'bg-white/5 border border-white/10'
                 }`}>

@@ -107,26 +107,12 @@ export async function fetchMessages(token, conversationId) {
 
     const data = response.data;
 
-    // Debug: log full response structure for first call of first conversation
-    if (messages.length === 0 && !pageToken) {
-      console.log(`[GHL] Raw response keys for ${conversationId}:`, Object.keys(data));
-      console.log(`[GHL] data.messages type:`, typeof data.messages, Array.isArray(data.messages) ? `array(${data.messages.length})` : '');
-      if (data.messages && typeof data.messages === 'object' && !Array.isArray(data.messages)) {
-        console.log(`[GHL] data.messages keys:`, Object.keys(data.messages));
-        console.log(`[GHL] data.messages.messages type:`, typeof data.messages?.messages, Array.isArray(data.messages?.messages) ? `array(${data.messages.messages.length})` : '');
-      }
-      // Log a slice of the raw JSON to see actual structure
-      console.log(`[GHL] Response sample:`, JSON.stringify(data).slice(0, 500));
-    }
-
-    // Handle both flat { messages: [...] } and nested { messages: { messages: [...] } }
+    // GHL returns { messages: { messages: [...], lastMessageId, nextPage } }
     let batch;
     if (Array.isArray(data.messages)) {
       batch = data.messages;
     } else if (Array.isArray(data.messages?.messages)) {
       batch = data.messages.messages;
-    } else if (Array.isArray(data)) {
-      batch = data;
     } else {
       batch = [];
     }
@@ -180,11 +166,15 @@ export async function fetchConversationsWithMessages(token, locationId, dateFrom
       }
 
       // Filter messages by selected types if any
+      // GHL uses TYPE_CUSTOM_SMS, TYPE_CUSTOM_EMAIL, etc. — match by keyword
       let filteredMessages = messages;
       if (messageTypes && messageTypes.length > 0) {
         filteredMessages = messages.filter(m => {
           const mt = (m.messageType || m.type || '').toUpperCase();
-          return messageTypes.some(t => mt === t.toUpperCase() || mt === t.replace('TYPE_', '').toUpperCase());
+          return messageTypes.some(t => {
+            const keyword = t.toUpperCase().replace('TYPE_', '');
+            return mt.includes(keyword);
+          });
         });
       }
 
