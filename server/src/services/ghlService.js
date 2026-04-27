@@ -18,9 +18,12 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, co
   let startAfterId = null;
   let hasMore = true;
   const fromDate = dateFrom ? new Date(dateFrom) : null;
-  const toDate = dateTo ? new Date(dateTo) : null;
+  // Set toDate to end of day so conversations on the last day are included
+  const toDate = dateTo ? new Date(new Date(dateTo).getTime() + 86400000 - 1) : null;
   let emptyPagesInRange = 0;
   let page = 0;
+
+  console.log(`[GHL] Fetching conversations: locationId=${locationId}, from=${fromDate?.toISOString()}, to=${toDate?.toISOString()}, types=${JSON.stringify(conversationTypes)}`);
 
   while (hasMore && page < MAX_PAGES) {
     page++;
@@ -38,26 +41,42 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, co
     const batch = data.conversations || [];
 
     if (batch.length === 0) {
+      console.log(`[GHL] Page ${page}: empty batch, stopping`);
       hasMore = false;
       break;
     }
 
+    // Log first page sample to debug type/date issues
+    if (page === 1 && batch.length > 0) {
+      const sample = batch.slice(0, 3).map(c => ({
+        type: c.type,
+        dateUpdated: c.dateUpdated,
+        dateAdded: c.dateAdded,
+        contactName: c.contactName || c.fullName,
+      }));
+      console.log(`[GHL] Page 1 sample (${batch.length} total):`, JSON.stringify(sample));
+    }
+
     let batchHasConversationsInRange = false;
+    let dateSkipped = 0;
+    let typeSkipped = 0;
 
     for (const conv of batch) {
       const convDate = new Date(conv.dateUpdated || conv.dateAdded || conv.createdAt);
 
-      if (fromDate && convDate < fromDate) continue;
-      if (toDate && convDate > toDate) continue;
+      if (fromDate && convDate < fromDate) { dateSkipped++; continue; }
+      if (toDate && convDate > toDate) { dateSkipped++; continue; }
 
       batchHasConversationsInRange = true;
 
       if (conversationTypes && conversationTypes.length > 0) {
-        if (!conversationTypes.includes(conv.type)) continue;
+        if (!conversationTypes.includes(conv.type)) { typeSkipped++; continue; }
       }
 
       conversations.push(conv);
     }
+
+    console.log(`[GHL] Page ${page}: ${batch.length} fetched, ${dateSkipped} date-skipped, ${typeSkipped} type-skipped, ${conversations.length} total matches`);
 
     // Stop early if we've moved past the date range
     if (!batchHasConversationsInRange) {
