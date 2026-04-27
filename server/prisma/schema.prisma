@@ -9,14 +9,15 @@ datasource db {
 }
 
 model User {
-  id         Int         @id @default(autoincrement())
-  email      String      @unique
-  password   String
-  name       String
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  ghlClients GHLClient[]
-  reports    Report[]
+  id             Int              @id @default(autoincrement())
+  email          String           @unique
+  password       String
+  name           String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  ghlClients     GHLClient[]
+  twilioAccounts TwilioAccount[]
+  reports        Report[]
 }
 
 model GHLClient {
@@ -31,21 +32,36 @@ model GHLClient {
   updatedAt   DateTime @updatedAt
 }
 
+model TwilioAccount {
+  id         Int      @id @default(autoincrement())
+  name       String
+  accountSid String
+  authToken  String
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reports    Report[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
 model Report {
-  id                 Int       @id @default(autoincrement())
+  id                 Int             @id @default(autoincrement())
   title              String
-  ghlClientId        Int
-  ghlClient          GHLClient @relation(fields: [ghlClientId], references: [id], onDelete: Cascade)
+  sourceType         String          @default("ghl")
+  ghlClientId        Int?
+  ghlClient          GHLClient?      @relation(fields: [ghlClientId], references: [id], onDelete: Cascade)
+  twilioAccountId    Int?
+  twilioAccount      TwilioAccount?  @relation(fields: [twilioAccountId], references: [id], onDelete: Cascade)
   userId             Int
-  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   dateFrom           DateTime
   dateTo             DateTime
-  conversationTypes  Json      @default("[]")
+  conversationTypes  Json            @default("[]")
   prompt             String
   result             String?
-  totalConversations Int       @default(0)
-  status             String    @default("pending")
+  totalConversations Int             @default(0)
+  status             String          @default("pending")
   progressMessage    String?
   error              String?
-  createdAt          DateTime  @default(now())
+  createdAt          DateTime        @default(now())
 }
