@@ -34,6 +34,9 @@ WORKDIR /app
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/client/dist ./client/dist
 
+# Re-generate Prisma client for Alpine (musl) target
+RUN cd server && npx prisma generate
+
 EXPOSE ${PORT:-3001}
 
 CMD ["sh", "-c", "cd server && npx prisma db push --skip-generate && node src/index.js"]
