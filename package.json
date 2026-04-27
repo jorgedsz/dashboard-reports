@@ -1,0 +1,14 @@
+{
+  "name": "ghl-reports",
+  "private": true,
+  "scripts": {
+    "server": "cd server && node src/index.js",
+    "client": "cd client && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "prisma:migrate": "cd server && npx prisma migrate dev",
+    "prisma:generate": "cd server && npx prisma generate"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
