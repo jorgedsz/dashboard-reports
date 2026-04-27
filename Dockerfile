@@ -2,12 +2,12 @@ FROM node:18 AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY server/package*.json ./server/
-COPY client/package*.json ./client/
+# Copy package.json only (no lockfiles — they contain Windows-specific native bindings)
+COPY package.json ./
+COPY server/package.json ./server/
+COPY client/package.json ./client/
 
-# Install dependencies (clean install for correct native bindings)
+# Fresh install for Linux platform
 RUN cd server && npm install
 RUN cd client && npm install
 
