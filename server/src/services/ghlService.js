@@ -7,18 +7,21 @@ function ghlHeaders(token) {
   return { Authorization: `Bearer ${token}`, Version: API_VERSION, Accept: 'application/json' };
 }
 
+/**
+ * Fetch conversations from GHL, paginated.
+ * Date filtering and type filtering done client-side since the
+ * GHL search endpoint only supports locationId, query, limit, startAfterId.
+ */
 export async function fetchConversations(token, locationId, dateFrom, dateTo, conversationTypes) {
   const conversations = [];
   let startAfterId = null;
   let hasMore = true;
+  const fromDate = dateFrom ? new Date(dateFrom) : null;
+  const toDate = dateTo ? new Date(dateTo) : null;
+  let emptyPagesInRange = 0;
 
   while (hasMore) {
-    const params = {
-      locationId,
-      limit: 100,
-    };
-    if (dateFrom) params.startAfterDate = new Date(dateFrom).toISOString();
-    if (dateTo) params.endBeforeDate = new Date(dateTo).toISOString();
+    const params = { locationId, limit: 100 };
     if (startAfterId) params.startAfterId = startAfterId;
 
     const response = await axios.get(`${GHL_BASE}/conversations/search`, {
@@ -29,11 +32,41 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, co
     const data = response.data;
     const batch = data.conversations || [];
 
-    const filtered = conversationTypes && conversationTypes.length > 0
-      ? batch.filter(c => conversationTypes.includes(c.type))
-      : batch;
+    if (batch.length === 0) {
+      hasMore = false;
+      break;
+    }
 
-    conversations.push(...filtered);
+    let batchHasConversationsInRange = false;
+
+    for (const conv of batch) {
+      const convDate = new Date(conv.dateUpdated || conv.dateAdded || conv.createdAt);
+
+      // Filter by date range
+      if (fromDate && convDate < fromDate) continue;
+      if (toDate && convDate > toDate) continue;
+
+      batchHasConversationsInRange = true;
+
+      // Filter by conversation type
+      if (conversationTypes && conversationTypes.length > 0) {
+        if (!conversationTypes.includes(conv.type)) continue;
+      }
+
+      conversations.push(conv);
+    }
+
+    // Stop if we've gone past our date range (conversations are ordered by most recent)
+    // If no conversations in range for 3 consecutive pages, we've gone past
+    if (!batchHasConversationsInRange) {
+      emptyPagesInRange++;
+      if (emptyPagesInRange >= 3) {
+        hasMore = false;
+        break;
+      }
+    } else {
+      emptyPagesInRange = 0;
+    }
 
     if (batch.length < 100) {
       hasMore = false;
@@ -46,6 +79,9 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, co
   return conversations;
 }
 
+/**
+ * Fetch messages for a single conversation.
+ */
 export async function fetchMessages(token, conversationId) {
   const messages = [];
   let pageToken = null;
@@ -74,6 +110,10 @@ export async function fetchMessages(token, conversationId) {
   return messages;
 }
 
+/**
+ * Fetch conversations with their messages.
+ * Calls onProgress(fetched, total) for progress updates.
+ */
 export async function fetchConversationsWithMessages(token, locationId, dateFrom, dateTo, conversationTypes, onProgress) {
   const conversations = await fetchConversations(token, locationId, dateFrom, dateTo, conversationTypes);
   const total = conversations.length;
