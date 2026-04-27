@@ -55,16 +55,6 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, on
       batchHasConversationsInRange = true;
       conversations.push(conv);
     }
-  }
-
-  // Deduplicate conversations (GHL can return same conversation across pages)
-  const seen = new Set();
-  const unique = [];
-  for (const conv of conversations) {
-    if (!seen.has(conv.id)) {
-      seen.add(conv.id);
-      unique.push(conv);
-    }
 
     if (!batchHasConversationsInRange) {
       emptyPagesInRange++;
@@ -80,6 +70,16 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, on
       hasMore = false;
     } else {
       startAfterId = batch[batch.length - 1].id;
+    }
+  }
+
+  // Deduplicate conversations (GHL can return same conversation across pages)
+  const seen = new Set();
+  const unique = [];
+  for (const conv of conversations) {
+    if (!seen.has(conv.id)) {
+      seen.add(conv.id);
+      unique.push(conv);
     }
   }
 
