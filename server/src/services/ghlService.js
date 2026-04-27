@@ -10,20 +10,19 @@ function ghlHeaders(token) {
 
 /**
  * Fetch conversations from GHL, paginated.
- * Date and type filtering done client-side.
+ * Date filtering done client-side (GHL search doesn't support date params).
  * onProgress(message) called for status updates.
  */
-export async function fetchConversations(token, locationId, dateFrom, dateTo, conversationTypes, onProgress) {
+export async function fetchConversations(token, locationId, dateFrom, dateTo, onProgress) {
   const conversations = [];
   let startAfterId = null;
   let hasMore = true;
   const fromDate = dateFrom ? new Date(dateFrom) : null;
-  // Set toDate to end of day so conversations on the last day are included
   const toDate = dateTo ? new Date(new Date(dateTo).getTime() + 86400000 - 1) : null;
   let emptyPagesInRange = 0;
   let page = 0;
 
-  console.log(`[GHL] Fetching conversations: locationId=${locationId}, from=${fromDate?.toISOString()}, to=${toDate?.toISOString()}, types=${JSON.stringify(conversationTypes)}`);
+  console.log(`[GHL] Fetching conversations: locationId=${locationId}, from=${fromDate?.toISOString()}, to=${toDate?.toISOString()}`);
 
   while (hasMore && page < MAX_PAGES) {
     page++;
@@ -41,46 +40,22 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, co
     const batch = data.conversations || [];
 
     if (batch.length === 0) {
-      console.log(`[GHL] Page ${page}: empty batch, stopping`);
       hasMore = false;
       break;
     }
 
-    // Log first page sample to debug type/date issues
-    if (page === 1 && batch.length > 0) {
-      const sample = batch.slice(0, 3).map(c => ({
-        type: c.type,
-        dateUpdated: c.dateUpdated,
-        dateAdded: c.dateAdded,
-        contactName: c.contactName || c.fullName,
-      }));
-      console.log(`[GHL] Page 1 sample (${batch.length} total):`, JSON.stringify(sample));
-    }
-
     let batchHasConversationsInRange = false;
-    let dateSkipped = 0;
-    let typeSkipped = 0;
-    const typesInRange = new Set();
 
     for (const conv of batch) {
       const convDate = new Date(conv.dateUpdated || conv.dateAdded || conv.createdAt);
 
-      if (fromDate && convDate < fromDate) { dateSkipped++; continue; }
-      if (toDate && convDate > toDate) { dateSkipped++; continue; }
+      if (fromDate && convDate < fromDate) continue;
+      if (toDate && convDate > toDate) continue;
 
       batchHasConversationsInRange = true;
-      typesInRange.add(conv.type);
-
-      if (conversationTypes && conversationTypes.length > 0) {
-        if (!conversationTypes.includes(conv.type)) { typeSkipped++; continue; }
-      }
-
       conversations.push(conv);
     }
 
-    console.log(`[GHL] Page ${page}: ${batch.length} fetched, ${dateSkipped} date-skipped, ${typeSkipped} type-skipped, ${conversations.length} total matches, types in range: [${[...typesInRange].join(', ')}]`);
-
-    // Stop early if we've moved past the date range
     if (!batchHasConversationsInRange) {
       emptyPagesInRange++;
       if (emptyPagesInRange >= 2) {
@@ -98,6 +73,7 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, co
     }
   }
 
+  console.log(`[GHL] Done scanning: ${page} pages, ${conversations.length} conversations in date range`);
   conversations.sort((a, b) => new Date(b.dateUpdated) - new Date(a.dateUpdated));
   return conversations;
 }
@@ -135,14 +111,17 @@ export async function fetchMessages(token, conversationId) {
 
 /**
  * Fetch conversations with their messages.
+ * messageTypes filter is applied at the message level, not conversation level.
+ * Conversations are included if they have at least one message matching the selected types.
  */
-export async function fetchConversationsWithMessages(token, locationId, dateFrom, dateTo, conversationTypes, onProgress) {
-  const conversations = await fetchConversations(token, locationId, dateFrom, dateTo, conversationTypes, onProgress);
+export async function fetchConversationsWithMessages(token, locationId, dateFrom, dateTo, messageTypes, onProgress) {
+  const conversations = await fetchConversations(token, locationId, dateFrom, dateTo, onProgress);
   const total = conversations.length;
 
   if (onProgress) onProgress(`Found ${total} conversations. Fetching messages...`);
 
   const results = [];
+  const messageTypesFound = new Set();
 
   for (let i = 0; i < conversations.length; i++) {
     const conv = conversations[i];
@@ -150,6 +129,32 @@ export async function fetchConversationsWithMessages(token, locationId, dateFrom
 
     try {
       const messages = await fetchMessages(token, conv.id);
+
+      // Log message types from first conversation to debug
+      if (i === 0 && messages.length > 0) {
+        const sampleTypes = [...new Set(messages.map(m => m.messageType || m.type))];
+        console.log(`[GHL] Sample message types from first conversation:`, JSON.stringify(sampleTypes));
+      }
+
+      // Track all message types seen
+      for (const m of messages) {
+        messageTypesFound.add(m.messageType || m.type || 'unknown');
+      }
+
+      // Filter messages by selected types if any
+      let filteredMessages = messages;
+      if (messageTypes && messageTypes.length > 0) {
+        filteredMessages = messages.filter(m => {
+          const mt = (m.messageType || m.type || '').toUpperCase();
+          return messageTypes.some(t => mt === t.toUpperCase() || mt === t.replace('TYPE_', '').toUpperCase());
+        });
+      }
+
+      // Only include conversation if it has matching messages
+      if (messageTypes && messageTypes.length > 0 && filteredMessages.length === 0) {
+        continue;
+      }
+
       results.push({
         id: conv.id,
         contactName: conv.contactName || conv.fullName || 'Unknown',
@@ -160,7 +165,7 @@ export async function fetchConversationsWithMessages(token, locationId, dateFrom
         dateUpdated: conv.dateUpdated || conv.lastMessageDate,
         lastMessageType: conv.lastMessageType || '',
         lastMessageDirection: conv.lastMessageDirection || '',
-        messages: messages.map(m => ({
+        messages: filteredMessages.map(m => ({
           body: m.body || '',
           direction: m.direction || '',
           type: m.messageType || m.type || '',
@@ -169,16 +174,11 @@ export async function fetchConversationsWithMessages(token, locationId, dateFrom
       });
     } catch (err) {
       console.error(`Failed to fetch messages for conversation ${conv.id}:`, err.message);
-      results.push({
-        id: conv.id,
-        contactName: conv.contactName || conv.fullName || 'Unknown',
-        type: conv.type || 'unknown',
-        dateUpdated: conv.dateUpdated || '',
-        messages: [],
-        error: 'Failed to fetch messages',
-      });
     }
   }
+
+  console.log(`[GHL] Message types found across all conversations: [${[...messageTypesFound].join(', ')}]`);
+  console.log(`[GHL] After message-level filtering: ${results.length} conversations with matching messages`);
 
   return results;
 }

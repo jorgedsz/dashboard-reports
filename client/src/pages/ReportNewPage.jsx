@@ -112,8 +112,8 @@ export default function ReportNewPage() {
           </div>
 
           <div className="glass p-6">
-            <h2 className="text-lg font-semibold mb-2">3. Conversation Types</h2>
-            <p className="text-sm text-gray-500 mb-4">Leave all unchecked to include all types</p>
+            <h2 className="text-lg font-semibold mb-2">3. Message Types</h2>
+            <p className="text-sm text-gray-500 mb-4">Filter by message type. Leave all unchecked to include all messages.</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {CONVERSATION_TYPES.map(({ value, label }) => (
                 <label key={value} className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all ${
