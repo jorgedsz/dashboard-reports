@@ -104,13 +104,17 @@ export async function testConnection(req, res) {
     res.json({ success: true, message: 'Connection successful' });
   } catch (err) {
     const status = err.response?.status;
+    const detail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
+    console.error('Test connection error:', status, detail);
     if (status === 401) {
-      return res.json({ success: false, message: 'Invalid bearer token' });
+      return res.json({ success: false, message: 'Invalid bearer token (401)' });
     }
     if (status === 400) {
-      return res.json({ success: false, message: 'Invalid location ID' });
+      return res.json({ success: false, message: 'Bad request — check location ID (400)' });
     }
-    console.error('Test connection error:', err.message);
-    res.json({ success: false, message: 'Connection failed: ' + err.message });
+    if (status === 422) {
+      return res.json({ success: false, message: 'Invalid parameters (422): ' + detail });
+    }
+    res.json({ success: false, message: `Connection failed (${status || 'network'}): ${detail}` });
   }
 }
