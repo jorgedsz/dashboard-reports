@@ -60,6 +60,7 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, co
     let batchHasConversationsInRange = false;
     let dateSkipped = 0;
     let typeSkipped = 0;
+    const typesInRange = new Set();
 
     for (const conv of batch) {
       const convDate = new Date(conv.dateUpdated || conv.dateAdded || conv.createdAt);
@@ -68,6 +69,7 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, co
       if (toDate && convDate > toDate) { dateSkipped++; continue; }
 
       batchHasConversationsInRange = true;
+      typesInRange.add(conv.type);
 
       if (conversationTypes && conversationTypes.length > 0) {
         if (!conversationTypes.includes(conv.type)) { typeSkipped++; continue; }
@@ -76,7 +78,7 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, co
       conversations.push(conv);
     }
 
-    console.log(`[GHL] Page ${page}: ${batch.length} fetched, ${dateSkipped} date-skipped, ${typeSkipped} type-skipped, ${conversations.length} total matches`);
+    console.log(`[GHL] Page ${page}: ${batch.length} fetched, ${dateSkipped} date-skipped, ${typeSkipped} type-skipped, ${conversations.length} total matches, types in range: [${[...typesInRange].join(', ')}]`);
 
     // Stop early if we've moved past the date range
     if (!batchHasConversationsInRange) {
