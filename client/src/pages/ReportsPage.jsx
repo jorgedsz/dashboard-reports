@@ -21,7 +21,7 @@ export default function ReportsPage() {
   useEffect(() => { fetchReports(); }, []);
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this report?')) return;
+    if (!confirm('¿Eliminar este reporte?')) return;
     await reportsAPI.delete(id);
     fetchReports();
   };
@@ -38,15 +38,15 @@ export default function ReportsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Report History</h1>
-        <Link to="/reports/new" className="btn-primary">New Report</Link>
+        <h1 className="text-2xl font-bold">Historial de Reportes</h1>
+        <Link to="/reports/new" className="btn-primary">Nuevo Reporte</Link>
       </div>
 
       {reports.length === 0 ? (
         <div className="glass p-12 text-center text-gray-500">
           <FileText size={48} className="mx-auto mb-4 opacity-50" />
-          <p>No reports yet.</p>
-          <p className="text-sm mt-1">Generate your first report to get started.</p>
+          <p>Aún no hay reportes.</p>
+          <p className="text-sm mt-1">Genera tu primer reporte para comenzar.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -57,7 +57,7 @@ export default function ReportsPage() {
                 <div>
                   <h3 className="font-medium">{r.title}</h3>
                   <p className="text-sm text-gray-500">
-                    {r.clientName} &bull; {new Date(r.dateFrom).toLocaleDateString()} — {new Date(r.dateTo).toLocaleDateString()} &bull; {r.totalConversations} conversations
+                    {r.clientName} &bull; {new Date(r.dateFrom).toLocaleDateString()} — {new Date(r.dateTo).toLocaleDateString()} &bull; {r.totalConversations} conversaciones
                   </p>
                 </div>
               </div>

@@ -18,7 +18,7 @@ export default function ClientsPage() {
       const res = await clientsAPI.list();
       setClients(res.data);
     } catch {
-      setError('Failed to load clients');
+      setError('Error al cargar los clientes');
     } finally {
       setLoading(false);
     }
@@ -41,7 +41,7 @@ export default function ClientsPage() {
       setForm({ name: '', bearerToken: '', locationId: '' });
       fetchClients();
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to save client');
+      setError(err.response?.data?.error || 'Error al guardar el cliente');
     } finally {
       setSaving(false);
     }
@@ -54,12 +54,12 @@ export default function ClientsPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this client? All associated reports will also be deleted.')) return;
+    if (!confirm('¿Eliminar este cliente? Todos los reportes asociados también se eliminarán.')) return;
     try {
       await clientsAPI.delete(id);
       fetchClients();
     } catch {
-      setError('Failed to delete client');
+      setError('Error al eliminar el cliente');
     }
   };
 
@@ -70,7 +70,7 @@ export default function ClientsPage() {
       const res = await clientsAPI.test(id);
       setTestResult({ id, ...res.data });
     } catch {
-      setTestResult({ id, success: false, message: 'Test failed' });
+      setTestResult({ id, success: false, message: 'Error en la prueba' });
     } finally {
       setTesting(null);
     }
@@ -81,9 +81,9 @@ export default function ClientsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">GHL Clients</h1>
+        <h1 className="text-2xl font-bold">Clientes GHL</h1>
         <button onClick={() => { setShowForm(true); setEditingId(null); setForm({ name: '', bearerToken: '', locationId: '' }); }} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> Add Client
+          <Plus size={18} /> Agregar Cliente
         </button>
       </div>
 
@@ -92,16 +92,16 @@ export default function ClientsPage() {
       {showForm && (
         <div className="glass p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">{editingId ? 'Edit Client' : 'Add New Client'}</h2>
+            <h2 className="text-lg font-semibold">{editingId ? 'Editar Cliente' : 'Agregar Nuevo Cliente'}</h2>
             <button onClick={() => { setShowForm(false); setEditingId(null); }} className="text-gray-400 hover:text-gray-200"><X size={20} /></button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Client Name</label>
-              <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-field" placeholder="e.g. Acme Corp" required />
+              <label className="block text-sm text-gray-400 mb-1">Nombre del Cliente</label>
+              <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-field" placeholder="ej. Empresa ABC" required />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Bearer Token {editingId && '(leave empty to keep current)'}</label>
+              <label className="block text-sm text-gray-400 mb-1">Bearer Token {editingId && '(dejar vacío para mantener el actual)'}</label>
               <input type="password" value={form.bearerToken} onChange={(e) => setForm({ ...form, bearerToken: e.target.value })} className="input-field" placeholder="pit-xxxxxxxx..." required={!editingId} />
             </div>
             <div>
@@ -109,7 +109,7 @@ export default function ClientsPage() {
               <input type="text" value={form.locationId} onChange={(e) => setForm({ ...form, locationId: e.target.value })} className="input-field" placeholder="xxxxxxxxxxxxxxxxxx" required />
             </div>
             <button type="submit" disabled={saving} className="btn-primary">
-              {saving ? 'Saving...' : editingId ? 'Update Client' : 'Add Client'}
+              {saving ? 'Guardando...' : editingId ? 'Actualizar Cliente' : 'Agregar Cliente'}
             </button>
           </form>
         </div>
@@ -117,8 +117,8 @@ export default function ClientsPage() {
 
       {clients.length === 0 ? (
         <div className="glass p-12 text-center text-gray-500">
-          <p>No GHL clients registered yet.</p>
-          <p className="text-sm mt-1">Click "Add Client" to get started.</p>
+          <p>Aún no hay clientes GHL registrados.</p>
+          <p className="text-sm mt-1">Haz clic en "Agregar Cliente" para comenzar.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -126,7 +126,7 @@ export default function ClientsPage() {
             <div key={client.id} className="glass p-4 flex items-center justify-between">
               <div>
                 <h3 className="font-medium">{client.name}</h3>
-                <p className="text-sm text-gray-500">Location: {client.locationId}</p>
+                <p className="text-sm text-gray-500">Ubicación: {client.locationId}</p>
               </div>
               <div className="flex items-center gap-2">
                 {testResult?.id === client.id && (
@@ -136,10 +136,10 @@ export default function ClientsPage() {
                 )}
                 <button onClick={() => handleTest(client.id)} disabled={testing === client.id} className="btn-secondary flex items-center gap-1 text-sm">
                   {testing === client.id ? <Loader2 size={14} className="animate-spin" /> : <TestTube size={14} />}
-                  Test
+                  Probar
                 </button>
                 <button onClick={() => handleEdit(client)} className="btn-secondary flex items-center gap-1 text-sm">
-                  <Pencil size={14} /> Edit
+                  <Pencil size={14} /> Editar
                 </button>
                 <button onClick={() => handleDelete(client.id)} className="text-red-400 hover:text-red-300 p-2">
                   <Trash2 size={16} />

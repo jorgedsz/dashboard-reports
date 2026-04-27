@@ -24,41 +24,48 @@ export default function DashboardPage() {
     failed: <XCircle size={14} className="text-red-400" />,
   };
 
+  const statusLabel = {
+    pending: 'pendiente',
+    processing: 'procesando',
+    completed: 'completado',
+    failed: 'fallido',
+  };
+
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="animate-spin text-orange-500" size={32} /></div>;
 
   const recentReports = stats.reports.slice(0, 5);
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Welcome, {user?.name}</h1>
+      <h1 className="text-2xl font-bold mb-6">Bienvenido, {user?.name}</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="glass p-6 flex items-center gap-4">
           <Users size={28} style={{ color: '#E8792F' }} />
           <div>
             <p className="text-2xl font-bold">{stats.clients}</p>
-            <p className="text-sm text-gray-500">GHL Clients</p>
+            <p className="text-sm text-gray-500">Clientes GHL</p>
           </div>
         </div>
         <div className="glass p-6 flex items-center gap-4">
           <FileText size={28} style={{ color: '#E8792F' }} />
           <div>
             <p className="text-2xl font-bold">{stats.reports.length}</p>
-            <p className="text-sm text-gray-500">Total Reports</p>
+            <p className="text-sm text-gray-500">Reportes Totales</p>
           </div>
         </div>
         <Link to="/reports/new" className="glass p-6 flex items-center gap-4 hover:bg-white/10 transition-colors">
           <Sparkles size={28} style={{ color: '#E8792F' }} />
           <div>
-            <p className="font-semibold">Generate Report</p>
-            <p className="text-sm text-gray-500">Create a new analysis</p>
+            <p className="font-semibold">Generar Reporte</p>
+            <p className="text-sm text-gray-500">Crear un nuevo análisis</p>
           </div>
         </Link>
       </div>
 
-      <h2 className="text-lg font-semibold mb-4">Recent Reports</h2>
+      <h2 className="text-lg font-semibold mb-4">Reportes Recientes</h2>
       {recentReports.length === 0 ? (
-        <div className="glass p-8 text-center text-gray-500">No reports yet</div>
+        <div className="glass p-8 text-center text-gray-500">Aún no hay reportes</div>
       ) : (
         <div className="space-y-2">
           {recentReports.map((r) => (
@@ -70,7 +77,7 @@ export default function DashboardPage() {
                   <p className="text-xs text-gray-500">{r.clientName} &bull; {new Date(r.createdAt).toLocaleDateString()}</p>
                 </div>
               </div>
-              <span className="text-xs text-gray-500 capitalize">{r.status}</span>
+              <span className="text-xs text-gray-500">{statusLabel[r.status] || r.status}</span>
             </Link>
           ))}
         </div>

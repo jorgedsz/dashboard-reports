@@ -74,11 +74,11 @@ Total conversations analyzed: ${totalConversations}`,
 
 export async function generateReport(conversations, userPrompt, onProgress) {
   if (conversations.length === 0) {
-    return 'No conversations found in the selected date range and filters.';
+    return 'No se encontraron conversaciones en el rango de fechas y filtros seleccionados.';
   }
 
   if (conversations.length <= CHUNK_SIZE) {
-    if (onProgress) onProgress('Analyzing conversations...');
+    if (onProgress) onProgress('Analizando conversaciones...');
     return await analyzeChunk(conversations, userPrompt, 0, 1);
   }
 
@@ -89,11 +89,11 @@ export async function generateReport(conversations, userPrompt, onProgress) {
 
   const subReports = [];
   for (let i = 0; i < chunks.length; i++) {
-    if (onProgress) onProgress(`Analyzing batch ${i + 1} of ${chunks.length}...`);
+    if (onProgress) onProgress(`Analizando lote ${i + 1} de ${chunks.length}...`);
     const subReport = await analyzeChunk(chunks[i], userPrompt, i, chunks.length);
     subReports.push(subReport);
   }
 
-  if (onProgress) onProgress('Merging results into final report...');
+  if (onProgress) onProgress('Combinando resultados en el reporte final...');
   return await mergeReports(subReports, userPrompt, conversations.length);
 }

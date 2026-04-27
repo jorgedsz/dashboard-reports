@@ -15,7 +15,7 @@ export async function list(req, res) {
     res.json(clients);
   } catch (err) {
     console.error('List clients error:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 }
 
@@ -23,7 +23,7 @@ export async function create(req, res) {
   try {
     const { name, bearerToken, locationId } = req.body;
     if (!name || !bearerToken || !locationId) {
-      return res.status(400).json({ error: 'Name, bearer token, and location ID are required' });
+      return res.status(400).json({ error: 'Nombre, bearer token y location ID son requeridos' });
     }
     const encryptedToken = encrypt(bearerToken);
     const client = await prisma.gHLClient.create({
@@ -33,7 +33,7 @@ export async function create(req, res) {
     res.status(201).json(client);
   } catch (err) {
     console.error('Create client error:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 }
 
@@ -43,11 +43,11 @@ export async function get(req, res) {
       where: { id: parseInt(req.params.id), userId: req.userId },
       select: { id: true, name: true, locationId: true, createdAt: true, updatedAt: true },
     });
-    if (!client) return res.status(404).json({ error: 'Client not found' });
+    if (!client) return res.status(404).json({ error: 'Cliente no encontrado' });
     res.json(client);
   } catch (err) {
     console.error('Get client error:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 }
 
@@ -56,7 +56,7 @@ export async function update(req, res) {
     const existing = await prisma.gHLClient.findFirst({
       where: { id: parseInt(req.params.id), userId: req.userId },
     });
-    if (!existing) return res.status(404).json({ error: 'Client not found' });
+    if (!existing) return res.status(404).json({ error: 'Cliente no encontrado' });
 
     const data = {};
     if (req.body.name) data.name = req.body.name;
@@ -71,7 +71,7 @@ export async function update(req, res) {
     res.json(updated);
   } catch (err) {
     console.error('Update client error:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 }
 
@@ -80,12 +80,12 @@ export async function remove(req, res) {
     const existing = await prisma.gHLClient.findFirst({
       where: { id: parseInt(req.params.id), userId: req.userId },
     });
-    if (!existing) return res.status(404).json({ error: 'Client not found' });
+    if (!existing) return res.status(404).json({ error: 'Cliente no encontrado' });
     await prisma.gHLClient.delete({ where: { id: existing.id } });
-    res.json({ message: 'Deleted' });
+    res.json({ message: 'Eliminado' });
   } catch (err) {
     console.error('Delete client error:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 }
 
@@ -94,27 +94,27 @@ export async function testConnection(req, res) {
     const client = await prisma.gHLClient.findFirst({
       where: { id: parseInt(req.params.id), userId: req.userId },
     });
-    if (!client) return res.status(404).json({ error: 'Client not found' });
+    if (!client) return res.status(404).json({ error: 'Cliente no encontrado' });
 
     const token = decrypt(client.bearerToken);
     const response = await axios.get(`${GHL_BASE}/conversations/search`, {
       headers: { Authorization: `Bearer ${token}`, Version: '2021-07-28', Accept: 'application/json' },
       params: { locationId: client.locationId, limit: 1 },
     });
-    res.json({ success: true, message: 'Connection successful' });
+    res.json({ success: true, message: 'Conexión exitosa' });
   } catch (err) {
     const status = err.response?.status;
     const detail = err.response?.data ? JSON.stringify(err.response.data) : err.message;
     console.error('Test connection error:', status, detail);
     if (status === 401) {
-      return res.json({ success: false, message: 'Invalid bearer token (401)' });
+      return res.json({ success: false, message: 'Bearer token inválido (401)' });
     }
     if (status === 400) {
-      return res.json({ success: false, message: 'Bad request — check location ID (400)' });
+      return res.json({ success: false, message: 'Solicitud inválida — verifica el location ID (400)' });
     }
     if (status === 422) {
-      return res.json({ success: false, message: 'Invalid parameters (422): ' + detail });
+      return res.json({ success: false, message: 'Parámetros inválidos (422):' + detail });
     }
-    res.json({ success: false, message: `Connection failed (${status || 'network'}): ${detail}` });
+    res.json({ success: false, message: `Conexión fallida (${status || 'network'}): ${detail}` });
   }
 }

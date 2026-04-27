@@ -10,13 +10,13 @@ export async function generate(req, res) {
     const { ghlClientId, title, dateFrom, dateTo, conversationTypes, prompt } = req.body;
 
     if (!ghlClientId || !dateFrom || !dateTo || !prompt) {
-      return res.status(400).json({ error: 'Client, date range, and prompt are required' });
+      return res.status(400).json({ error: 'Cliente, rango de fechas y prompt son requeridos' });
     }
 
     const client = await prisma.gHLClient.findFirst({
       where: { id: ghlClientId, userId: req.userId },
     });
-    if (!client) return res.status(404).json({ error: 'GHL client not found' });
+    if (!client) return res.status(404).json({ error: 'Cliente GHL no encontrado' });
 
     const report = await prisma.report.create({
       data: {
@@ -28,7 +28,7 @@ export async function generate(req, res) {
         conversationTypes: conversationTypes || [],
         prompt,
         status: 'processing',
-        progressMessage: 'Fetching conversations from GHL...',
+        progressMessage: 'Obteniendo conversaciones de GHL...',
       },
     });
 
@@ -76,7 +76,7 @@ export async function generate(req, res) {
     }
   } catch (err) {
     console.error('Generate report error:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 }
 
@@ -95,7 +95,7 @@ export async function listReports(req, res) {
     })));
   } catch (err) {
     console.error('List reports error:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 }
 
@@ -105,11 +105,11 @@ export async function getReport(req, res) {
       where: { id: parseInt(req.params.id), userId: req.userId },
       include: { ghlClient: { select: { name: true } } },
     });
-    if (!report) return res.status(404).json({ error: 'Report not found' });
+    if (!report) return res.status(404).json({ error: 'Reporte no encontrado' });
     res.json({ ...report, clientName: report.ghlClient.name });
   } catch (err) {
     console.error('Get report error:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 }
 
@@ -118,11 +118,11 @@ export async function deleteReport(req, res) {
     const existing = await prisma.report.findFirst({
       where: { id: parseInt(req.params.id), userId: req.userId },
     });
-    if (!existing) return res.status(404).json({ error: 'Report not found' });
+    if (!existing) return res.status(404).json({ error: 'Reporte no encontrado' });
     await prisma.report.delete({ where: { id: existing.id } });
-    res.json({ message: 'Deleted' });
+    res.json({ message: 'Eliminado' });
   } catch (err) {
     console.error('Delete report error:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Error del servidor' });
   }
 }

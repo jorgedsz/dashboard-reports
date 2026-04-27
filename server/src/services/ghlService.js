@@ -26,7 +26,7 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, on
 
   while (hasMore && page < MAX_PAGES) {
     page++;
-    if (onProgress) onProgress(`Scanning conversations (page ${page}, found ${conversations.length} matches)...`);
+    if (onProgress) onProgress(`Escaneando conversaciones (página ${page}, ${conversations.length} coincidencias encontradas)...`);
 
     const params = { locationId, limit: 100 };
     if (startAfterId) params.startAfterId = startAfterId;
@@ -142,14 +142,14 @@ export async function fetchConversationsWithMessages(token, locationId, dateFrom
   const conversations = await fetchConversations(token, locationId, dateFrom, dateTo, onProgress);
   const total = conversations.length;
 
-  if (onProgress) onProgress(`Found ${total} conversations. Fetching messages...`);
+  if (onProgress) onProgress(`Se encontraron ${total} conversaciones. Obteniendo mensajes...`);
 
   const results = [];
   const messageTypesFound = new Set();
 
   for (let i = 0; i < conversations.length; i++) {
     const conv = conversations[i];
-    if (onProgress) onProgress(`Fetching messages (${i + 1}/${total})...`);
+    if (onProgress) onProgress(`Obteniendo mensajes (${i + 1}/${total})...`);
 
     try {
       const messages = await fetchMessages(token, conv.id);

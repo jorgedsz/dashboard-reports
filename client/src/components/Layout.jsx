@@ -3,10 +3,10 @@ import { useAuth } from '../context/AuthContext';
 import { LayoutDashboard, Users, FilePlus, FileText, LogOut } from 'lucide-react';
 
 const links = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/clients', label: 'GHL Clients', icon: Users },
-  { to: '/reports/new', label: 'New Report', icon: FilePlus },
-  { to: '/reports', label: 'Report History', icon: FileText },
+  { to: '/', label: 'Panel', icon: LayoutDashboard },
+  { to: '/clients', label: 'Clientes GHL', icon: Users },
+  { to: '/reports/new', label: 'Nuevo Reporte', icon: FilePlus },
+  { to: '/reports', label: 'Historial', icon: FileText },
 ];
 
 export default function Layout({ children }) {
@@ -47,7 +47,7 @@ export default function Layout({ children }) {
           <p className="text-sm text-gray-500 mb-2">{user?.email}</p>
           <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-400 hover:text-red-400 transition-colors">
             <LogOut size={16} />
-            Logout
+            Cerrar sesión
           </button>
         </div>
       </aside>
