@@ -98,7 +98,7 @@ export async function testConnection(req, res) {
 
     const token = decrypt(client.bearerToken);
     const response = await axios.get(`${GHL_BASE}/conversations/search`, {
-      headers: { Authorization: `Bearer ${token}`, Version: '20210124' },
+      headers: { Authorization: `Bearer ${token}`, Version: '2021-07-28', Accept: 'application/json' },
       params: { locationId: client.locationId, limit: 1 },
     });
     res.json({ success: true, message: 'Connection successful' });

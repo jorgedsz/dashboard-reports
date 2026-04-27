@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
-const API_VERSION = '20210124';
+const API_VERSION = '2021-07-28';
 
 function ghlHeaders(token) {
-  return { Authorization: `Bearer ${token}`, Version: API_VERSION };
+  return { Authorization: `Bearer ${token}`, Version: API_VERSION, Accept: 'application/json' };
 }
 
 export async function fetchConversations(token, locationId, dateFrom, dateTo, conversationTypes) {
