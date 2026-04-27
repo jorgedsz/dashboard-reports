@@ -1,18 +1,22 @@
-FROM node:18 AS builder
+FROM node:20 AS builder
 
 WORKDIR /app
 
-# Copy package.json only (no lockfiles — they contain Windows-specific native bindings)
-COPY package.json ./
-COPY server/package.json ./server/
+# Copy only package.json (no lockfiles)
 COPY client/package.json ./client/
+COPY server/package.json ./server/
 
-# Fresh install for Linux platform
+# Install client deps and remove any stale state
+RUN cd client && npm install --prefer-offline=false
+
+# Install server deps
 RUN cd server && npm install
-RUN cd client && npm install
 
-# Copy source code
+# Copy all source code
 COPY . .
+
+# Rebuild native bindings to ensure correct platform
+RUN cd client && npm rebuild
 
 # Build client
 RUN cd client && npm run build
@@ -21,11 +25,10 @@ RUN cd client && npm run build
 RUN cd server && npx prisma generate
 
 # --- Production stage ---
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy server with dependencies
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/client/dist ./client/dist
 
