@@ -43,10 +43,10 @@ export async function generate(req, res) {
         dateFrom,
         dateTo,
         conversationTypes || [],
-        async (fetched, total) => {
+        async (message) => {
           await prisma.report.update({
             where: { id: report.id },
-            data: { progressMessage: `Fetching messages... (${fetched}/${total} conversations)` },
+            data: { progressMessage: message },
           });
         }
       );

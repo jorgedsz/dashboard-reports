@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const GHL_BASE = 'https://services.leadconnectorhq.com';
 const API_VERSION = '2021-07-28';
+const MAX_PAGES = 20; // Safety limit: max 2000 conversations scanned
 
 function ghlHeaders(token) {
   return { Authorization: `Bearer ${token}`, Version: API_VERSION, Accept: 'application/json' };
@@ -9,18 +10,22 @@ function ghlHeaders(token) {
 
 /**
  * Fetch conversations from GHL, paginated.
- * Date filtering and type filtering done client-side since the
- * GHL search endpoint only supports locationId, query, limit, startAfterId.
+ * Date and type filtering done client-side.
+ * onProgress(message) called for status updates.
  */
-export async function fetchConversations(token, locationId, dateFrom, dateTo, conversationTypes) {
+export async function fetchConversations(token, locationId, dateFrom, dateTo, conversationTypes, onProgress) {
   const conversations = [];
   let startAfterId = null;
   let hasMore = true;
   const fromDate = dateFrom ? new Date(dateFrom) : null;
   const toDate = dateTo ? new Date(dateTo) : null;
   let emptyPagesInRange = 0;
+  let page = 0;
 
-  while (hasMore) {
+  while (hasMore && page < MAX_PAGES) {
+    page++;
+    if (onProgress) onProgress(`Scanning conversations (page ${page}, found ${conversations.length} matches)...`);
+
     const params = { locationId, limit: 100 };
     if (startAfterId) params.startAfterId = startAfterId;
 
@@ -42,13 +47,11 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, co
     for (const conv of batch) {
       const convDate = new Date(conv.dateUpdated || conv.dateAdded || conv.createdAt);
 
-      // Filter by date range
       if (fromDate && convDate < fromDate) continue;
       if (toDate && convDate > toDate) continue;
 
       batchHasConversationsInRange = true;
 
-      // Filter by conversation type
       if (conversationTypes && conversationTypes.length > 0) {
         if (!conversationTypes.includes(conv.type)) continue;
       }
@@ -56,11 +59,10 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, co
       conversations.push(conv);
     }
 
-    // Stop if we've gone past our date range (conversations are ordered by most recent)
-    // If no conversations in range for 3 consecutive pages, we've gone past
+    // Stop early if we've moved past the date range
     if (!batchHasConversationsInRange) {
       emptyPagesInRange++;
-      if (emptyPagesInRange >= 3) {
+      if (emptyPagesInRange >= 2) {
         hasMore = false;
         break;
       }
@@ -112,15 +114,19 @@ export async function fetchMessages(token, conversationId) {
 
 /**
  * Fetch conversations with their messages.
- * Calls onProgress(fetched, total) for progress updates.
  */
 export async function fetchConversationsWithMessages(token, locationId, dateFrom, dateTo, conversationTypes, onProgress) {
-  const conversations = await fetchConversations(token, locationId, dateFrom, dateTo, conversationTypes);
+  const conversations = await fetchConversations(token, locationId, dateFrom, dateTo, conversationTypes, onProgress);
   const total = conversations.length;
+
+  if (onProgress) onProgress(`Found ${total} conversations. Fetching messages...`);
+
   const results = [];
 
   for (let i = 0; i < conversations.length; i++) {
     const conv = conversations[i];
+    if (onProgress) onProgress(`Fetching messages (${i + 1}/${total})...`);
+
     try {
       const messages = await fetchMessages(token, conv.id);
       results.push({
@@ -151,8 +157,6 @@ export async function fetchConversationsWithMessages(token, locationId, dateFrom
         error: 'Failed to fetch messages',
       });
     }
-
-    if (onProgress) onProgress(i + 1, total);
   }
 
   return results;
