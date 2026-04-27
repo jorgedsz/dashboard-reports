@@ -55,6 +55,16 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, on
       batchHasConversationsInRange = true;
       conversations.push(conv);
     }
+  }
+
+  // Deduplicate conversations (GHL can return same conversation across pages)
+  const seen = new Set();
+  const unique = [];
+  for (const conv of conversations) {
+    if (!seen.has(conv.id)) {
+      seen.add(conv.id);
+      unique.push(conv);
+    }
 
     if (!batchHasConversationsInRange) {
       emptyPagesInRange++;
@@ -73,9 +83,9 @@ export async function fetchConversations(token, locationId, dateFrom, dateTo, on
     }
   }
 
-  console.log(`[GHL] Done scanning: ${page} pages, ${conversations.length} conversations in date range`);
-  conversations.sort((a, b) => new Date(b.dateUpdated) - new Date(a.dateUpdated));
-  return conversations;
+  console.log(`[GHL] Done scanning: ${page} pages, ${conversations.length} raw, ${unique.length} unique conversations in date range`);
+  unique.sort((a, b) => new Date(b.dateUpdated) - new Date(a.dateUpdated));
+  return unique;
 }
 
 /**
@@ -96,7 +106,16 @@ export async function fetchMessages(token, conversationId) {
     });
 
     const data = response.data;
-    const batch = data.messages || [];
+    const batch = data.messages;
+
+    // GHL may return non-array for some conversations
+    if (!Array.isArray(batch)) {
+      console.warn(`[GHL] Non-array messages response for ${conversationId}:`, typeof batch, batch ? Object.keys(batch).slice(0, 5) : 'null');
+      break;
+    }
+
+    if (batch.length === 0) break;
+
     messages.push(...batch);
 
     if (batch.length < 100) {
