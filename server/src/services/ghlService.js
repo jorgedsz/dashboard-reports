@@ -106,24 +106,41 @@ export async function fetchMessages(token, conversationId) {
     });
 
     const data = response.data;
-    // GHL wraps messages: { messages: { messages: [...], lastMessageId, nextPage } }
-    const raw = data.messages;
-    const batch = Array.isArray(raw) ? raw : Array.isArray(raw?.messages) ? raw.messages : [];
 
-    if (batch.length === 0 && raw && !Array.isArray(raw)) {
-      console.log(`[GHL] Messages response structure for ${conversationId}:`, Object.keys(raw), `inner messages count: ${raw.messages?.length || 0}`);
+    // Debug: log full response structure for first call of first conversation
+    if (messages.length === 0 && !pageToken) {
+      console.log(`[GHL] Raw response keys for ${conversationId}:`, Object.keys(data));
+      console.log(`[GHL] data.messages type:`, typeof data.messages, Array.isArray(data.messages) ? `array(${data.messages.length})` : '');
+      if (data.messages && typeof data.messages === 'object' && !Array.isArray(data.messages)) {
+        console.log(`[GHL] data.messages keys:`, Object.keys(data.messages));
+        console.log(`[GHL] data.messages.messages type:`, typeof data.messages?.messages, Array.isArray(data.messages?.messages) ? `array(${data.messages.messages.length})` : '');
+      }
+      // Log a slice of the raw JSON to see actual structure
+      console.log(`[GHL] Response sample:`, JSON.stringify(data).slice(0, 500));
+    }
+
+    // Handle both flat { messages: [...] } and nested { messages: { messages: [...] } }
+    let batch;
+    if (Array.isArray(data.messages)) {
+      batch = data.messages;
+    } else if (Array.isArray(data.messages?.messages)) {
+      batch = data.messages.messages;
+    } else if (Array.isArray(data)) {
+      batch = data;
+    } else {
+      batch = [];
     }
 
     if (batch.length === 0) break;
 
     messages.push(...batch);
 
-    // Use nextPage from nested structure if available, otherwise fall back to count-based
-    const nextPage = raw?.nextPage;
-    if (batch.length < 100 && !nextPage) {
+    // Use nextPage from nested structure if available
+    const wrapper = typeof data.messages === 'object' && !Array.isArray(data.messages) ? data.messages : data;
+    if (batch.length < 100 && !wrapper.nextPage) {
       hasMore = false;
     } else {
-      pageToken = raw?.lastMessageId || batch[batch.length - 1].id;
+      pageToken = wrapper.lastMessageId || batch[batch.length - 1].id;
     }
   }
 
