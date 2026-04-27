@@ -34,4 +34,4 @@ COPY --from=builder /app/client/dist ./client/dist
 
 EXPOSE ${PORT:-3001}
 
-CMD ["sh", "-c", "cd server && npx prisma migrate deploy && node src/index.js"]
+CMD ["sh", "-c", "cd server && npx prisma db push --skip-generate && node src/index.js"]
