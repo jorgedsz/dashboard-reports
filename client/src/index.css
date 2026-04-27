@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+:root {
+  --accent: #E8792F;
+}
+
+body {
+  @apply bg-gray-950 text-gray-100 min-h-screen;
+}
+
+.dot-bg {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.glass {
+  @apply bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl;
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  @apply text-white px-4 py-2 rounded-lg font-medium transition-all;
+}
+.btn-primary:hover {
+  @apply brightness-110;
+}
+
+.btn-secondary {
+  @apply bg-white/10 text-gray-200 px-4 py-2 rounded-lg font-medium transition-all;
+}
+.btn-secondary:hover {
+  @apply bg-white/20;
+}
+
+.input-field {
+  @apply w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-gray-100 placeholder-gray-500 focus:outline-none focus:border-orange-500/50;
+}
