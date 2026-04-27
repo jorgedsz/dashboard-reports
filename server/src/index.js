@@ -13,6 +13,7 @@ import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth.js';
 import ghlClientRoutes from './routes/ghlClients.js';
 import reportRoutes from './routes/reports.js';
+import twilioAccountRoutes from './routes/twilioAccounts.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,6 +32,7 @@ app.use('/api/auth/register', authLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/ghl-clients', ghlClientRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/twilio-accounts', twilioAccountRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
