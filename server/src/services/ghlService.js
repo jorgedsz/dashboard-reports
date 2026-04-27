@@ -106,22 +106,24 @@ export async function fetchMessages(token, conversationId) {
     });
 
     const data = response.data;
-    const batch = data.messages;
+    // GHL wraps messages: { messages: { messages: [...], lastMessageId, nextPage } }
+    const raw = data.messages;
+    const batch = Array.isArray(raw) ? raw : Array.isArray(raw?.messages) ? raw.messages : [];
 
-    // GHL may return non-array for some conversations
-    if (!Array.isArray(batch)) {
-      console.warn(`[GHL] Non-array messages response for ${conversationId}:`, typeof batch, batch ? Object.keys(batch).slice(0, 5) : 'null');
-      break;
+    if (batch.length === 0 && raw && !Array.isArray(raw)) {
+      console.log(`[GHL] Messages response structure for ${conversationId}:`, Object.keys(raw), `inner messages count: ${raw.messages?.length || 0}`);
     }
 
     if (batch.length === 0) break;
 
     messages.push(...batch);
 
-    if (batch.length < 100) {
+    // Use nextPage from nested structure if available, otherwise fall back to count-based
+    const nextPage = raw?.nextPage;
+    if (batch.length < 100 && !nextPage) {
       hasMore = false;
     } else {
-      pageToken = batch[batch.length - 1].id;
+      pageToken = raw?.lastMessageId || batch[batch.length - 1].id;
     }
   }
 
