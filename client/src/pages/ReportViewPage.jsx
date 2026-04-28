@@ -59,10 +59,10 @@ export default function ReportViewPage() {
 
       <div className="glass p-4 mb-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
         <div className="flex items-center gap-2">{statusConfig[report.status]?.icon}<span>{statusConfig[report.status]?.label || report.status}</span></div>
-        <div><span className="text-gray-500">Cliente:</span> {report.clientName}</div>
+        <div><span className="text-gray-500">Fuente:</span> {report.sourceType === 'twilio' ? 'Twilio' : 'GHL'} — {report.clientName}</div>
         <div><span className="text-gray-500">Rango:</span> {new Date(report.dateFrom).toLocaleDateString()} — {new Date(report.dateTo).toLocaleDateString()}</div>
         <div><span className="text-gray-500">Tipos:</span> {typesDisplay}</div>
-        <div><span className="text-gray-500">Conversaciones:</span> {report.totalConversations}</div>
+        <div><span className="text-gray-500">{report.sourceType === 'twilio' ? 'Llamadas' : 'Conversaciones'}:</span> {report.totalConversations}</div>
       </div>
 
       <div className="glass p-4 mb-6">

@@ -1,18 +1,22 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { clientsAPI, reportsAPI } from '../services/api';
+import { clientsAPI, reportsAPI, twilioAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Users, FileText, Sparkles, Loader2, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Users, Phone, FileText, Sparkles, Loader2, CheckCircle, Clock, XCircle } from 'lucide-react';
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [stats, setStats] = useState({ clients: 0, reports: [] });
+  const [stats, setStats] = useState({ clients: 0, twilioAccounts: 0, reports: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([clientsAPI.list(), reportsAPI.list()])
-      .then(([clientsRes, reportsRes]) => {
-        setStats({ clients: clientsRes.data.length, reports: reportsRes.data });
+    Promise.all([clientsAPI.list(), twilioAPI.list(), reportsAPI.list()])
+      .then(([clientsRes, twilioRes, reportsRes]) => {
+        setStats({
+          clients: clientsRes.data.length,
+          twilioAccounts: twilioRes.data.length,
+          reports: reportsRes.data,
+        });
       })
       .finally(() => setLoading(false));
   }, []);
@@ -39,12 +43,19 @@ export default function DashboardPage() {
     <div>
       <h1 className="text-2xl font-bold mb-6">Bienvenido, {user?.name}</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="glass p-6 flex items-center gap-4">
           <Users size={28} style={{ color: '#E8792F' }} />
           <div>
             <p className="text-2xl font-bold">{stats.clients}</p>
             <p className="text-sm text-gray-500">Clientes GHL</p>
+          </div>
+        </div>
+        <div className="glass p-6 flex items-center gap-4">
+          <Phone size={28} style={{ color: '#E8792F' }} />
+          <div>
+            <p className="text-2xl font-bold">{stats.twilioAccounts}</p>
+            <p className="text-sm text-gray-500">Cuentas Twilio</p>
           </div>
         </div>
         <div className="glass p-6 flex items-center gap-4">

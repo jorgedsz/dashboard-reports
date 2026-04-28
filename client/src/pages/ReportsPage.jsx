@@ -57,7 +57,8 @@ export default function ReportsPage() {
                 <div>
                   <h3 className="font-medium">{r.title}</h3>
                   <p className="text-sm text-gray-500">
-                    {r.clientName} &bull; {new Date(r.dateFrom).toLocaleDateString()} — {new Date(r.dateTo).toLocaleDateString()} &bull; {r.totalConversations} conversaciones
+                    <span className={`inline-block px-1.5 py-0.5 rounded text-xs mr-1 ${r.sourceType === 'twilio' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>{r.sourceType === 'twilio' ? 'Twilio' : 'GHL'}</span>
+                    {r.clientName} &bull; {new Date(r.dateFrom).toLocaleDateString()} — {new Date(r.dateTo).toLocaleDateString()} &bull; {r.totalConversations} {r.sourceType === 'twilio' ? 'llamadas' : 'conversaciones'}
                   </p>
                 </div>
               </div>

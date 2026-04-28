@@ -9,6 +9,7 @@ import ClientsPage from './pages/ClientsPage';
 import ReportNewPage from './pages/ReportNewPage';
 import ReportViewPage from './pages/ReportViewPage';
 import ReportsPage from './pages/ReportsPage';
+import TwilioAccountsPage from './pages/TwilioAccountsPage';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/" element={<ProtectedRoute><Layout><DashboardPage /></Layout></ProtectedRoute>} />
           <Route path="/clients" element={<ProtectedRoute><Layout><ClientsPage /></Layout></ProtectedRoute>} />
+          <Route path="/twilio-accounts" element={<ProtectedRoute><Layout><TwilioAccountsPage /></Layout></ProtectedRoute>} />
           <Route path="/reports/new" element={<ProtectedRoute><Layout><ReportNewPage /></Layout></ProtectedRoute>} />
           <Route path="/reports/:id" element={<ProtectedRoute><Layout><ReportViewPage /></Layout></ProtectedRoute>} />
           <Route path="/reports" element={<ProtectedRoute><Layout><ReportsPage /></Layout></ProtectedRoute>} />

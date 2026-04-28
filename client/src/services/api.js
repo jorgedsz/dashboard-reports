@@ -41,4 +41,13 @@ export const reportsAPI = {
   delete: (id) => api.delete(`/reports/${id}`),
 };
 
+export const twilioAPI = {
+  list: () => api.get('/twilio-accounts'),
+  create: (data) => api.post('/twilio-accounts', data),
+  get: (id) => api.get(`/twilio-accounts/${id}`),
+  update: (id, data) => api.put(`/twilio-accounts/${id}`, data),
+  delete: (id) => api.delete(`/twilio-accounts/${id}`),
+  test: (id) => api.post(`/twilio-accounts/${id}/test`),
+};
+
 export default api;

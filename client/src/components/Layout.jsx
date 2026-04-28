@@ -1,10 +1,11 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, Users, FilePlus, FileText, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Phone, FilePlus, FileText, LogOut } from 'lucide-react';
 
 const links = [
   { to: '/', label: 'Panel', icon: LayoutDashboard },
   { to: '/clients', label: 'Clientes GHL', icon: Users },
+  { to: '/twilio-accounts', label: 'Cuentas Twilio', icon: Phone },
   { to: '/reports/new', label: 'Nuevo Reporte', icon: FilePlus },
   { to: '/reports', label: 'Historial', icon: FileText },
 ];
